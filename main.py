@@ -1,6 +1,8 @@
 import os
+import sys
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 def main():
     # load environment variables from the .env file
@@ -12,10 +14,23 @@ def main():
     # create a new instance of a Gemini client using the API key
     client = genai.Client(api_key=api_key)
 
+    # if no prompt is provided, print usage instructions and exit
+    if not sys.argv[1:]:
+        print("Usage: python main.py <prompt>")
+        sys.exit(1)
+
+    # join the command line arguments to form the user prompt
+    user_prompt = " ".join(sys.argv[1:])
+
+    # create a list of messages with the user prompt
+    messages = [
+        types.Content(role="user", parts=[types.Part(text=user_prompt)])
+    ]
+
     # generate a response from the Gemini model
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
-        contents="Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
+        contents=messages
     )
     print(f"Response: {response.text}")
 
