@@ -1,4 +1,5 @@
 import os
+import sys
 from dotenv import load_dotenv
 from google import genai
 
@@ -12,10 +13,18 @@ def main():
     # create a new instance of a Gemini client using the API key
     client = genai.Client(api_key=api_key)
 
+    # if no command line arguments are provided after the script name, print usage instructions and exit
+    if not sys.argv[1:]:
+        print("Usage: python main.py <prompt>")
+        sys.exit(1)
+
+    # join the command line arguments after the script name to form the user prompt
+    user_prompt = " ".join(sys.argv[1:])
+
     # get a response from the Gemini model
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
-        contents="Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
+        contents=user_prompt
     )
 
     # print the response and the number of tokens consumed
