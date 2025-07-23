@@ -14,13 +14,33 @@ def main():
     # create a new instance of a Gemini client using the API key
     client = genai.Client(api_key=api_key)
 
-    # if no command line arguments are provided after the script name, print usage instructions and exit
-    if not sys.argv[1:]:
-        print("Usage: python main.py <prompt>")
+    # initialize verbose mode to false
+    verbose_enabled = False
+
+    # if the verbose flag is present in the command line arguments, set verbose mode to true
+    if "--verbose" in sys.argv:
+        verbose_enabled = True
+
+    # initialize an empty list for command line arguments
+    arguments = []
+
+    # for each argument in the command line arguments after the script name
+    for arg in sys.argv[1:]:
+        # if the argument doesn't match the verbose flag, append it to the arguments list
+        if arg != "--verbose":
+            arguments.append(arg)
+
+    # if no command line arguments are provided, print usage instructions and exit
+    if not arguments:
+        print("Usage: python main.py <prompt> [--verbose]")
         sys.exit(1)
 
-    # join the command line arguments after the script name to form the user prompt
-    user_prompt = " ".join(sys.argv[1:])
+    # join the command line arguments to form the user prompt
+    user_prompt = " ".join(arguments)
+
+    # if verbose mode is enabled, print the user prompt
+    if verbose_enabled:
+        print(f"User prompt: {user_prompt}")
 
     # create a list of messages with the user prompt
     messages = [
@@ -33,10 +53,13 @@ def main():
         contents=messages
     )
 
-    # print the response and the number of tokens consumed
+    # print the response
     print(f"Response: {response.text}")
-    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+    # if verbose mode is enabled, print the number of tokens consumed
+    if verbose_enabled:
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
 if __name__ == "__main__":
     main()
