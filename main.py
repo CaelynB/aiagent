@@ -2,6 +2,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 def main():
     # load the environment variables from the .env file
@@ -21,10 +22,15 @@ def main():
     # join the command line arguments after the script name to form the user prompt
     user_prompt = " ".join(sys.argv[1:])
 
+    # create a list of messages with the user prompt
+    messages = [
+        types.Content(role="user", parts=[types.Part(text=user_prompt)])
+    ]
+
     # get a response from the Gemini model
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
-        contents=user_prompt
+        contents=messages
     )
 
     # print the response and the number of tokens consumed
