@@ -32,4 +32,4 @@ def get_file_content(working_directory, file_path):
         # return the content of the file as a string
         return file_content_string
     except Exception as e:
-        return f"Error reading file: {e}"
+        return f'Error reading file "{file_path}": {e}'
