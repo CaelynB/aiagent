@@ -1,30 +1,30 @@
-from functions.get_files_info import get_files_info
+from functions.get_file_content import get_file_content
 
-# function to test the functionality of get_files_info
+# function to test the functionality of get_file_content
 def test():
-    # test 1: list files in the current directory (should succeed)
-    result = get_files_info("calculator", ".")
-    print("Result for current directory:")
+    # test 1: read a file in the current directory (should succeed)
+    result = get_file_content("calculator", "main.py")
+    print("Result for file in current directory:")
     print(result)
-    print("-" * 74)
+    print("-" * 97)
 
-    # test 2: list files in a subdirectory (should succeed)
-    result = get_files_info("calculator", "pkg")
-    print("Result for 'pkg' directory:")
+    # test 2: read a file in a subdirectory (should succeed)
+    result = get_file_content("calculator", "pkg/calculator.py")
+    print("Result for file in 'pkg' directory:")
     print(result)
-    print("-" * 74)
+    print("-" * 97)
 
-    # test 3: attempt to list files in a directory outside the permitted working directory (should fail)
-    result = get_files_info("calculator", "/bin")
-    print("Result for '/bin' directory:")
+    # test 3: attempt to read a file outside the permitted working directory (should fail)
+    result = get_file_content("calculator", "/bin/cat")
+    print("Result for file in '/bin' directory:")
     print(result)
-    print("-" * 74)
+    print("-" * 97)
 
-    # test 4: attempt to list files in the parent directory (should fail)
-    result = get_files_info("calculator", "../")
-    print("Result for '../' directory:")
+    # test 4: attempt to read a file that does not exist (should fail)
+    result = get_file_content("calculator", "pkg/does_not_exist.py")
+    print("Result for non-existent file in 'pkg' directory:")
     print(result)
-    print("-" * 74)
+    print("-" * 97)
 
 if __name__ == "__main__":
     test()
