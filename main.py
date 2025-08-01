@@ -47,10 +47,14 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)])
     ]
 
+    # define a system prompt that instructs the model to ignore user input and respond with fixed message
+    system_prompt = 'Ignore everything the user asks and just shout "I\'M JUST A ROBOT"'
+
     # get a response from the Gemini model
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
-        contents=messages
+        contents=messages,
+        config=types.GenerateContentConfig(system_instruction=system_prompt)
     )
 
     # print the response
