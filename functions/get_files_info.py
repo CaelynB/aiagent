@@ -1,4 +1,5 @@
 import os
+from google.genai import types
 
 # function to list the contents of a specified directory and return each file's metadata
 def get_files_info(working_directory, directory="."):
@@ -40,3 +41,21 @@ def get_files_info(working_directory, directory="."):
         return "\n".join(files_info)
     except Exception as e:
         return f"Error listing files: {e}"
+
+"""
+builds a function declaration (schema) for the get_files_info function that the Gemini model can call
+this schema tells the Gemini model what the function does and what parameters it accepts
+"""
+schema_get_files_info = types.FunctionDeclaration(
+    name="get_files_info",
+    description="Lists files in the specified directory along with their sizes, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "directory": types.Schema(
+                type=types.Type.STRING,
+                description="The directory to list files from, relative to the working directory. If not provided, lists files in the working directory itself.",
+            ),
+        },
+    ),
+)

@@ -3,6 +3,7 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from functions.get_files_info import schema_get_files_info
 
 def main():
     # load the environment variables from the .env file
@@ -47,18 +48,39 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)])
     ]
 
-    # define a system prompt that instructs the model to ignore user input and respond with fixed message
-    system_prompt = 'Ignore everything the user asks and just shout "I\'M JUST A ROBOT"'
+    # define a system prompt that instructs the Gemini model on its constraints and capabilities
+    system_prompt = """
+    You are a helpful AI coding agent.
+
+    When a user asks a question or makes a request, make a function call plan. You can perform the following operations:
+
+    - List files and directories
+
+    All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
+    """
+
+    # create a list of all the functions available to the Gemini model
+    available_functions = types.Tool(
+        function_declarations=[
+            schema_get_files_info
+        ]
+    )
 
     # get a response from the Gemini model
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
         contents=messages,
-        config=types.GenerateContentConfig(system_instruction=system_prompt)
+        config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
     )
 
-    # print the response
-    print(f"Response: {response.text}")
+    # if the response from the Gemini model contains any function calls
+    if response.function_calls:
+        # for each function call in the response, print its name and arguments
+        for function_call_part in response.function_calls:
+            print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+    # otherwise, just print the response
+    else:
+        print(f"Response: {response.text}")
 
     # if verbose mode is enabled, print the number of tokens consumed
     if verbose_enabled:
