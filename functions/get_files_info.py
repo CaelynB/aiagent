@@ -42,10 +42,8 @@ def get_files_info(working_directory, directory="."):
     except Exception as e:
         return f"Error listing files: {e}"
 
-"""
-builds a function declaration (schema) for the get_files_info function that the Gemini model can call
-this schema tells the Gemini model what the function does and what parameters it accepts
-"""
+# builds a function declaration (schema) for the get_files_info function that the Gemini model can call
+# this schema tells the Gemini model what the function does and what parameters it accepts
 schema_get_files_info = types.FunctionDeclaration(
     name="get_files_info",
     description="Lists files in the specified directory along with their sizes, constrained to the working directory.",

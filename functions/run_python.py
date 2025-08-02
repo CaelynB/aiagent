@@ -1,5 +1,6 @@
 import os
 import subprocess
+from google.genai import types
 
 # function to run a specified Python file
 def run_python_file(working_directory, file_path, args=[]):
@@ -63,3 +64,28 @@ def run_python_file(working_directory, file_path, args=[]):
         return "\n".join(output)
     except Exception as e:
         return f"Error: executing Python file: {e}"
+
+# builds a function declaration (schema) for the run_python_file function that the Gemini model can call
+# this schema tells the Gemini model what the function does and what parameters it accepts
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Executes a Python file within the working directory and returns the output from the interpreter.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Path to the Python file to execute, relative to the working directory.",
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                items=types.Schema(
+                    type=types.Type.STRING,
+                    description="Optional arguments to pass to the Python file.",
+                ),
+                description="Optional arguments to pass to the Python file.",
+            ),
+        },
+        required=["file_path"],
+    ),
+)
