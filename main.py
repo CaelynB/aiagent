@@ -3,10 +3,11 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from functions.get_files_info import schema_get_files_info
-from functions.get_file_content import schema_get_file_content
-from functions.run_python import schema_run_python_file
-from functions.write_file import schema_write_file
+from functions.get_files_info import get_files_info, schema_get_files_info
+from functions.get_file_content import get_file_content, schema_get_file_content
+from functions.run_python import run_python_file, schema_run_python_file
+from functions.write_file import write_file, schema_write_file
+from config import WORKING_DIRECTORY
 
 def main():
     # load the environment variables from the .env file
@@ -82,19 +83,88 @@ def main():
         config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
     )
 
+    # initialize an empty list to store function responses
+    function_responses = []
+
     # if the response from the Gemini model contains any function calls
     if response.function_calls:
-        # for each function call in the response, print its name and arguments
+        # for each function call in the response
         for function_call_part in response.function_calls:
-            print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+            # call the function with the provided arguments and store the result
+            function_call_result = call_function(function_call_part, verbose_enabled)
+
+            # if the result is empty or missing a function response, raise an exception
+            if not function_call_result.parts or not function_call_result.parts[0].function_response:
+                raise Exception("empty function call result")
+
+            # if verbose mode is enabled, print the response returned by the function
+            if verbose_enabled:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
+
+            # append the result to the list of function responses
+            function_responses.append(function_call_result.parts[0])
     # otherwise, just print the response
     else:
         print(f"Response: {response.text}")
+
+    # if the list of function responses is empty, raise an exception
+    if not function_responses:
+        raise Exception("no function responses generated, exiting.")
 
     # if verbose mode is enabled, print the number of tokens consumed
     if verbose_enabled:
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+# function to call the appropriate function based on the provided function call part
+def call_function(function_call_part, verbose_enabled=False):
+    # get the function name and arguments from the function call
+    function_name = function_call_part.name
+    function_args = dict(function_call_part.args)
+
+    # if verbose mode is enabled, print the function name and arguments
+    if verbose_enabled:
+        print(f"Calling function: {function_name}({function_args})")
+    # otherwise, just print the function name
+    else:
+        print(f" - Calling function: {function_name}")
+
+    # create a dictionary to map available function names to their corresponding implementations
+    function_map = {
+        "get_files_info": get_files_info,
+        "get_file_content": get_file_content,
+        "run_python_file": run_python_file,
+        "write_file": write_file
+    }
+
+    # if the function name is not in the function map dictionary, return an error message
+    if function_name not in function_map:
+        return types.Content(
+            role="tool",
+            parts=[
+                types.Part.from_function_response(
+                    name=function_name,
+                    response={"error": f"Unknown function: {function_name}"},
+                )
+            ],
+        )
+    
+    # add the working directory to the function arguments dictionary
+    function_args["working_directory"] = WORKING_DIRECTORY
+
+    # call the mapped function based on the function name with the keyword arguments
+    function_result = function_map[function_name](**function_args)
+
+    # return the result of the function call
+    return types.Content(
+        role="tool",
+        parts=[
+            types.Part.from_function_response(
+                name=function_name,
+                response={"result": function_result},
+            )
+        ],
+    )
 
 if __name__ == "__main__":
     main()
